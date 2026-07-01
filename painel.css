@@ -1,0 +1,65 @@
+/* ==========================================================
+                    TRASH HUNTERS
+                    PAINEL.CSS
+========================================================== */
+
+/* ==========================================================
+                        RESET
+========================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #f5f7f4;
+    color: #333;
+    overflow-x: hidden;
+    text-align: center;
+}
+
+:root {
+    --green: #A8E6A3;
+    --green-dark: #74c365;
+    --blue: #B8E2F2;
+    --yellow: #FFF2B3;
+    --red: #F8C0C0;
+    --white: #ffffff;
+    --gray: #f2f2f2;
+    --gray2: #d8d8d8;
+    --gray3: #808080;
+    --shadow: 0 8px 30px rgba(0, 0, 0, .08);
+    --radius: 18px;
+    --transition: .35s;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #eeeeee;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--green-dark);
+    border-radius: 30px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #4caf50;
+}
+
+h1{
+    text-decoration: none;
+    color: inherit;
+    text-align: center
+    ;
+}
