@@ -1,20 +1,27 @@
 <?php
+include '../protect.php';
+include '../conexao.php';
 
-// Conexão com o banco de dados
-include 'conexao.php';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $titulo = trim($_POST['titulo'] ?? '');
+    $conteudo = trim($_POST['conteudo'] ?? '');
+    $usuario_id = $_SESSION['id'];
 
-// Vamos obter os valores do título e do conteúdo enviados pelo formulário
-$titulo = $_POST['titulo'];
-$conteudo = $_POST['conteudo'];
+    if ($titulo !== '' && $conteudo !== '') {
+        $stmt = $mysqli->prepare("INSERT INTO posts (usuario_id, titulo, conteudo) VALUES (?, ?, ?)");
+        $stmt->bind_param("iss", $usuario_id, $titulo, $conteudo);
 
-$stmt = $conn->prepare("INSERT INTO posts (titulo, conteudo) VALUE (?, ?)");
-$stmt->bind_param("ss", $titulo, $conteudo);
-
-if ($stmt->execute()) {
-    echo "Postagem salva com suceso! <br><br><a href='painel.php'>Criar nova Postagem</a>";
+        if ($stmt->execute()) {
+            header('Location: ../painel.php');
+            exit();
+        } else {
+            echo "Erro ao salvar a postagem: " . $stmt->error;
+        }
+    } else {
+        echo "Preencha título e conteúdo antes de publicar.";
+    }
 } else {
-    echo "Erro ao salvar a postagem: " . $stmt->error;
+    header('Location: criar_post.php');
+    exit();
 }
-
-// Fechando a declaração e a conexão com o banco de dados
-$smtp->clse();
+?>
