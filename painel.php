@@ -2,13 +2,13 @@
 include 'protect.php';
 include 'conexao.php';
 
-$stmt = $mysqli->prepare("SELECT id, titulo, conteudo, data_criacao FROM posts WHERE usuario_id = ? ORDER BY id DESC");
+$stmt = $mysqli->prepare("SELECT id, titulo, conteudo, midia, midia_tipo, data_criacao FROM posts WHERE usuario_id = ? ORDER BY id DESC");
 $stmt->bind_param("i", $_SESSION['id']);
 $stmt->execute();
 $result = $stmt->get_result();
 $posts = $result->fetch_all(MYSQLI_ASSOC);
 
-$stmt_outros = $mysqli->prepare("SELECT p.id, p.titulo, p.conteudo, p.data_criacao, u.nome AS autor FROM posts p JOIN usuarios u ON p.usuario_id = u.id WHERE p.usuario_id != ? ORDER BY p.id DESC");
+$stmt_outros = $mysqli->prepare("SELECT p.id, p.titulo, p.conteudo, p.midia, p.midia_tipo, p.data_criacao, u.nome AS autor FROM posts p JOIN usuarios u ON p.usuario_id = u.id WHERE p.usuario_id != ? ORDER BY p.id DESC");
 $stmt_outros->bind_param("i", $_SESSION['id']);
 $stmt_outros->execute();
 $result_outros = $stmt_outros->get_result();
@@ -45,6 +45,13 @@ $outras_postagens = $result_outros->fetch_all(MYSQLI_ASSOC);
                         </div>
                         <h3><?php echo htmlspecialchars($post['titulo']); ?></h3>
                         <p><?php echo nl2br(htmlspecialchars($post['conteudo'])); ?></p>
+                        <?php if (!empty($post['midia'])): ?>
+                            <?php if ($post['midia_tipo'] === 'video'): ?>
+                                <video src="<?php echo htmlspecialchars($post['midia']); ?>" controls style="max-width:100%;border-radius:12px;margin-top:10px;"></video>
+                            <?php else: ?>
+                                <img src="<?php echo htmlspecialchars($post['midia']); ?>" alt="Imagem da postagem" style="max-width:100%;border-radius:12px;margin-top:10px;">
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </article>
                 <?php endforeach; ?>
             <?php endif; ?>
@@ -63,6 +70,13 @@ $outras_postagens = $result_outros->fetch_all(MYSQLI_ASSOC);
                         </div>
                         <h3><?php echo htmlspecialchars($post['titulo']); ?></h3>
                         <p><?php echo nl2br(htmlspecialchars($post['conteudo'])); ?></p>
+                        <?php if (!empty($post['midia'])): ?>
+                            <?php if ($post['midia_tipo'] === 'video'): ?>
+                                <video src="<?php echo htmlspecialchars($post['midia']); ?>" controls style="max-width:100%;border-radius:12px;margin-top:10px;"></video>
+                            <?php else: ?>
+                                <img src="<?php echo htmlspecialchars($post['midia']); ?>" alt="Imagem da postagem" style="max-width:100%;border-radius:12px;margin-top:10px;">
+                            <?php endif; ?>
+                        <?php endif; ?>
                     </article>
                 <?php endforeach; ?>
             <?php endif; ?>

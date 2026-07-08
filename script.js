@@ -10,7 +10,6 @@
 ========================================================== */
 
 const likeButtons = document.querySelectorAll(".like-btn");
-const dislikeButtons = document.querySelectorAll(".dislike-btn");
 const commentButtons = document.querySelectorAll(".comment-btn");
 const comments = document.querySelectorAll(".comments");
 
@@ -18,73 +17,49 @@ const backToTop = document.getElementById("backToTop");
 const floatingButton = document.getElementById("floating-post-btn");
 
 /* ==========================================================
-                    LIKE
+                    LIKE (persistido no banco via post/curtir.php)
 ========================================================== */
 
 likeButtons.forEach(button => {
 
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
+
+        const postId = button.dataset.postId;
+
+        if (!postId) return;
 
         const icon = button.querySelector("i");
         const counter = button.querySelector("span");
 
-        let likes = parseInt(counter.textContent);
+        try {
 
-        if (!button.classList.contains("liked")) {
+            const response = await fetch("post/curtir.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "post_id=" + encodeURIComponent(postId)
+            });
 
-            button.classList.add("liked");
+            const data = await response.json();
 
-            icon.classList.remove("fa-regular");
-            icon.classList.add("fa-solid");
+            if (data.erro) {
+                alert(data.erro);
+                return;
+            }
 
-            counter.textContent = likes + 1;
+            counter.textContent = data.total;
 
-        } else {
+            if (data.curtiu) {
+                button.classList.add("liked");
+                icon.classList.remove("fa-regular");
+                icon.classList.add("fa-solid");
+            } else {
+                button.classList.remove("liked");
+                icon.classList.remove("fa-solid");
+                icon.classList.add("fa-regular");
+            }
 
-            button.classList.remove("liked");
-
-            icon.classList.remove("fa-solid");
-            icon.classList.add("fa-regular");
-
-            counter.textContent = likes - 1;
-
-        }
-
-    });
-
-});
-
-/* ==========================================================
-                    DESLIKE
-========================================================== */
-
-dislikeButtons.forEach(button => {
-
-    button.addEventListener("click", () => {
-
-        const icon = button.querySelector("i");
-        const counter = button.querySelector("span");
-
-        let dislikes = parseInt(counter.textContent);
-
-        if (!button.classList.contains("disliked")) {
-
-            button.classList.add("disliked");
-
-            icon.classList.remove("fa-regular");
-            icon.classList.add("fa-solid");
-
-            counter.textContent = dislikes + 1;
-
-        } else {
-
-            button.classList.remove("disliked");
-
-            icon.classList.remove("fa-solid");
-            icon.classList.add("fa-regular");
-
-            counter.textContent = dislikes - 1;
-
+        } catch (e) {
+            console.error("Erro ao curtir:", e);
         }
 
     });
@@ -224,40 +199,59 @@ commentInputs.forEach(inputArea => {
 
     const input = inputArea.querySelector("input");
     const button = inputArea.querySelector("button");
+    const postId = inputArea.dataset.postId;
 
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
 
         const text = input.value.trim();
 
-        if(text === ""){
-
+        if (text === "") {
             alert("Digite um comentário.");
-
             return;
-
         }
 
-        const newComment = document.createElement("div");
+        if (!postId) return;
 
-        newComment.className = "comment";
+        try {
 
-        newComment.innerHTML = `
+            const response = await fetch("post/comentar.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "post_id=" + encodeURIComponent(postId) + "&conteudo=" + encodeURIComponent(text)
+            });
 
-            <img src="assets/avatars/avatar.png" alt="Avatar">
+            const data = await response.json();
 
-            <div>
+            if (data.erro) {
+                alert(data.erro);
+                return;
+            }
 
-                <strong>Você</strong>
+            const avatarSrc = data.avatar ? data.avatar : ("https://ui-avatars.com/api/?background=1f6f4a&color=fff&name=" + encodeURIComponent(data.nome));
 
-                <p>${text}</p>
+            const newComment = document.createElement("div");
+            newComment.className = "comment";
+            newComment.innerHTML = `
+                <img src="${avatarSrc}" alt="${data.nome}">
+                <div>
+                    <strong>${data.nome}</strong>
+                    <p>${data.conteudo}</p>
+                </div>
+            `;
 
-            </div>
+            inputArea.parentNode.insertBefore(newComment, inputArea);
+            input.value = "";
 
-        `;
+            // Atualiza o contador de comentários no botão daquele post
+            const commentBtn = document.querySelector('.comment-btn[data-post-id="' + postId + '"]');
+            if (commentBtn) {
+                const span = commentBtn.querySelector("span");
+                span.textContent = parseInt(span.textContent) + 1;
+            }
 
-        inputArea.parentNode.insertBefore(newComment, inputArea);
-
-        input.value = "";
+        } catch (e) {
+            console.error("Erro ao comentar:", e);
+        }
 
     });
 
@@ -434,17 +428,38 @@ previewModal.classList.remove("active");
             ABRIR NOTIFICAÇÕES
 ========================================================== */
 
-const bellButton=document.querySelector(".top-icons button");
+const bellButton = document.getElementById("botao-notificacoes");
 
-const notificationModal=document.getElementById("notificationModal");
+const notificationModal = document.getElementById("notificationModal");
 
-if(bellButton){
+if (bellButton) {
 
-bellButton.addEventListener("click",()=>{
+    bellButton.addEventListener("click", async () => {
 
-notificationModal.classList.add("active");
+        notificationModal.classList.add("active");
 
-});
+        // Marca como lidas (curtida/comentário) e some com o badge vermelho
+        const badge = bellButton.querySelector(".icon-badge");
+
+        if (badge) {
+
+            try {
+                await fetch("notificacoes/marcar_lidas.php", { method: "POST" });
+                badge.remove();
+
+                document.querySelectorAll(".notification-item.nao-lida").forEach(item => {
+                    if (!item.dataset.tipo || item.dataset.tipo !== "mensagem") {
+                        item.classList.remove("nao-lida");
+                    }
+                });
+
+            } catch (e) {
+                console.error("Erro ao marcar notificações como lidas:", e);
+            }
+
+        }
+
+    });
 
 }
 
@@ -516,102 +531,86 @@ if (searchInput) {
                 NOVA POSTAGEM
 ========================================================== */
 
+// A publicação agora é feita por um <form> real (post/salvar_postagem.php),
+// então não precisamos mais criar o post "na mão" aqui em JS.
+// Deixamos só uma validação simples (texto OU mídia) antes de enviar.
+
 const publishButton = document.querySelector(".publish");
 const postTextarea = document.querySelector(".new-post textarea");
+const midiaInput = document.getElementById("midia-input");
 
 if (publishButton && postTextarea) {
 
-    publishButton.addEventListener("click", () => {
+    publishButton.closest("form")?.addEventListener("submit", (event) => {
 
-        const text = postTextarea.value.trim();
+        const temTexto = postTextarea.value.trim() !== "";
+        const temMidia = midiaInput && midiaInput.files.length > 0;
 
-        if (text === "") {
-
-            alert("Escreva algo antes de publicar.");
-
-            return;
-
+        if (!temTexto && !temMidia) {
+            event.preventDefault();
+            alert("Escreva algo ou selecione uma foto/vídeo antes de publicar.");
         }
 
-        const feed = document.querySelector(".feed");
+    });
 
-        const article = document.createElement("article");
+}
 
-        article.className = "post";
+/* ==========================================================
+                UPLOAD DE MÍDIA NA NOVA POSTAGEM
+========================================================== */
 
-        article.innerHTML = `
+const midiaBotao = document.getElementById("midia-botao");
+const midiaPreview = document.getElementById("midia-preview");
+const midiaPreviewImagem = document.getElementById("midia-preview-imagem");
+const midiaPreviewVideo = document.getElementById("midia-preview-video");
+const midiaRemover = document.getElementById("midia-remover");
 
-        <div class="post-top">
+if (midiaBotao && midiaInput) {
 
-            <img src="assets/avatars/avatar.png">
+    midiaBotao.addEventListener("click", () => {
+        midiaInput.click();
+    });
 
-            <div>
+    midiaInput.addEventListener("change", () => {
 
-                <h3>Você</h3>
+        const arquivo = midiaInput.files[0];
 
-                <span>Agora mesmo</span>
+        if (!arquivo) return;
 
-            </div>
+        const tamanhoMaximo = arquivo.type.startsWith("video/") ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
 
-        </div>
+        if (arquivo.size > tamanhoMaximo) {
+            alert("Arquivo muito grande. O limite é " + (tamanhoMaximo / 1024 / 1024) + "MB.");
+            midiaInput.value = "";
+            return;
+        }
 
-        <p>${text}</p>
+        const url = URL.createObjectURL(arquivo);
 
-        <div class="post-footer">
+        if (arquivo.type.startsWith("video/")) {
+            midiaPreviewVideo.src = url;
+            midiaPreviewVideo.style.display = "block";
+            midiaPreviewImagem.style.display = "none";
+        } else {
+            midiaPreviewImagem.src = url;
+            midiaPreviewImagem.style.display = "block";
+            midiaPreviewVideo.style.display = "none";
+        }
 
-            <button class="like-btn">
+        midiaPreview.style.display = "block";
 
-                <i class="fa-regular fa-heart"></i>
+    });
 
-                <span>0</span>
+}
 
-            </button>
+if (midiaRemover) {
 
-            <button class="dislike-btn">
+    midiaRemover.addEventListener("click", () => {
 
-                <i class="fa-regular fa-thumbs-down"></i>
-
-                <span>0</span>
-
-            </button>
-
-            <button class="comment-btn">
-
-                <i class="fa-regular fa-comment"></i>
-
-                <span>0</span>
-
-            </button>
-
-            <button class="share-btn">
-
-                <i class="fa-solid fa-share"></i>
-
-                Compartilhar
-
-            </button>
-
-        </div>
-
-        <section class="comments" style="display:none;">
-
-            <div class="comment-input">
-
-                <input type="text" placeholder="Escreva um comentário...">
-
-                <button>Enviar</button>
-
-            </div>
-
-        </section>
-
-        `;
-
-        feed.insertBefore(article, feed.children[1]);
-
-        postTextarea.value = "";
-
-        alert("Postagem publicada com sucesso!");
+        midiaInput.value = "";
+        midiaPreview.style.display = "none";
+        midiaPreviewImagem.src = "";
+        midiaPreviewVideo.src = "";
 
     });
 

@@ -1,35 +1,38 @@
 <?php
+session_start();
 include 'conexao.php';
 
+$mensagem = "";
+
 if(isset($_POST['email']) && isset($_POST['senha'])) {
-    
+
     if(strlen($_POST['email']) == 0) {
-        echo "Preencha seu e-mail";
+        $mensagem = "Preencha seu e-mail";
     } else if(strlen($_POST['senha']) == 0) {
-        echo "Preencha sua senha";
+        $mensagem = "Preencha sua senha";
     } else {
-        $email = $mysqli->real_escape_string($_POST['email']);
-        $senha = $mysqli->real_escape_string($_POST['senha']);
+        $email = trim($_POST['email']);
+        $senha = $_POST['senha'];
 
-        $sql_code = "SELECT * FROM usuarios WHERE email = '$email' AND senha = '$senha'";
-        $sql_query = $mysqli->query($sql_code) or die("Falha na execução do código SQL: " . $mysqli->error);
+        $stmt = $mysqli->prepare("SELECT * FROM usuarios WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
 
-        $quantidade = $sql_query->num_rows;
+        if ($resultado->num_rows == 1) {
+            $usuario = $resultado->fetch_assoc();
 
-        if($quantidade == 1) {
-            $usuario = $sql_query->fetch_assoc();
+            if (password_verify($senha, $usuario['senha'])) {
+                $_SESSION['id'] = $usuario['id'];
+                $_SESSION['nome'] = $usuario['nome'];
 
-            if(!isset($_SESSION)) {
-                session_start();
+                header("Location: index.php");
+                exit();
+            } else {
+                $mensagem = "Falha ao logar! E-mail ou senha incorretos";
             }
-
-            $_SESSION['id'] = $usuario['id'];
-            $_SESSION['nome'] = $usuario['nome'];
-
-            header("Location: painel.php");
-            exit();
         } else {
-            echo "Falha ao logar! E-mail ou senha incorretos";
+            $mensagem = "Falha ao logar! E-mail ou senha incorretos";
         }
     }
 }
@@ -54,6 +57,9 @@ if(isset($_POST['email']) && isset($_POST['senha'])) {
         </header>
 
         <main class="form-card">
+            <?php if (!empty($mensagem)): ?>
+                <div class="form-message"><?php echo htmlspecialchars($mensagem); ?></div>
+            <?php endif; ?>
             <form action="login.php" method="POST" class="post-form">
                 <div class="form-group">
                     <label for="email">E-mail</label>

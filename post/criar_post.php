@@ -22,7 +22,7 @@ include '../conexao.php';
         </header>
 
         <main class="form-card">
-            <form action="salvar_postagem.php" method="POST" class="post-form">
+            <form action="salvar_postagem.php" method="POST" class="post-form" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="titulo">Título</label>
                     <input type="text" name="titulo" id="titulo" required>
@@ -30,6 +30,11 @@ include '../conexao.php';
                 <div class="form-group">
                     <label for="conteudo">Conteúdo</label>
                     <textarea name="conteudo" id="conteudo" rows="8" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="midia">Foto ou vídeo (opcional)</label>
+                    <input type="file" name="midia" id="midia" accept="image/*,video/*">
+                    <small>Imagens até 5MB, vídeos curtos até 25MB.</small>
                 </div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Criar Post</button>

@@ -4,21 +4,33 @@ include "conexao.php";
 
 if (isset($_POST['nome']) && isset($_POST['email']) && isset($_POST['senha'])) {
 
-    $nome  = $mysqli->real_escape_string($_POST['nome']);
-    $email = $mysqli->real_escape_string($_POST['email']);
-    $senha = $mysqli->real_escape_string($_POST['senha']);
+    $nome  = trim($_POST['nome']);
+    $email = trim($_POST['email']);
+    $senha = $_POST['senha'];
 
-    // Verifica se e-mail já existe
-    $check = $mysqli->query("SELECT id FROM usuarios WHERE email = '$email'");
-    if ($check->num_rows > 0) {
-        $mensagem = "E-mail já cadastrado!";
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $mensagem = "E-mail inválido!";
     } else {
-        $sql = "INSERT INTO usuarios (nome, email, senha) VALUES ('$nome', '$email', '$senha')";
-        if ($mysqli->query($sql)) {
-            header("Location: login.php");
-            exit();
+        // Verifica se e-mail já existe
+        $check = $mysqli->prepare("SELECT id FROM usuarios WHERE email = ?");
+        $check->bind_param("s", $email);
+        $check->execute();
+        $check_result = $check->get_result();
+
+        if ($check_result->num_rows > 0) {
+            $mensagem = "E-mail já cadastrado!";
         } else {
-            $mensagem = "Erro ao cadastrar: " . $mysqli->error;
+            $senha_hash = password_hash($senha, PASSWORD_DEFAULT);
+
+            $stmt = $mysqli->prepare("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)");
+            $stmt->bind_param("sss", $nome, $email, $senha_hash);
+
+            if ($stmt->execute()) {
+                header("Location: login.php");
+                exit();
+            } else {
+                $mensagem = "Erro ao cadastrar: " . $stmt->error;
+            }
         }
     }
 }
