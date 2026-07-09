@@ -66,13 +66,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="painel-container">
-        <header class="painel-header">
-            <div>
-                <h1>Editar perfil</h1>
-                <p>Atualize suas informações e sua foto de perfil.</p>
-            </div>
-            <a class="btn btn-secondary" href="index.php">Voltar ao feed</a>
-        </header>
+        <?php 
+        $titulo = 'Editar perfil';
+        $subtitulo = 'Atualize suas informações e sua foto de perfil.';
+        $botao_texto = 'Voltar ao feed';
+        $botao_link = 'index.php';
+        $botao_tipo = 'secondary';
+        include 'components/header-painel.php'; 
+        ?>
 
         <main class="form-card">
             <?php if (!empty($mensagem)): ?>

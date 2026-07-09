@@ -73,15 +73,11 @@ if ($usuario_id > 0) {
 </head>
 <body>
 
-    <header class="topbar">
-        <div class="logo">
-            <i class="fa-solid fa-recycle"></i>
-            <h1>Trash Hunters</h1>
-        </div>
-        <a href="index.php" class="btn btn-secondary" style="margin-left:auto;">
-            <i class="fa-solid fa-arrow-left"></i> Voltar ao feed
-        </a>
-    </header>
+    <?php 
+    $botao_voltar = 'index.php';
+    $botao_voltar_label = 'Voltar ao feed';
+    include 'components/header-topbar.php'; 
+    ?>
 
     <div class="mensagens-container">
 

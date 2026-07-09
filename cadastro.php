@@ -46,13 +46,14 @@ if (isset($_POST['nome']) && isset($_POST['email']) && isset($_POST['senha'])) {
 </head>
 <body>
     <div class="painel-container">
-        <header class="painel-header">
-            <div>
-                <h1>Criar Usuário</h1>
-                <p>Cadastre-se para começar a publicar suas postagens.</p>
-            </div>
-            <a class="btn btn-secondary" href="login.php">Voltar</a>
-        </header>
+        <?php 
+        $titulo = 'Criar Usuário';
+        $subtitulo = 'Cadastre-se para começar a publicar suas postagens.';
+        $botao_texto = 'Voltar';
+        $botao_link = 'login.php';
+        $botao_tipo = 'secondary';
+        include 'components/header-painel.php'; 
+        ?>
 
         <main class="form-card">
             <?php if (!empty($mensagem)): ?>

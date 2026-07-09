@@ -67,14 +67,19 @@ function processar_upload_midia($arquivo, &$erro) {
     }
 
     $novo_nome = 'post_' . uniqid() . '.' . $extensao;
-    $destino = __DIR__ . '/assets/posts/' . $novo_nome;
+    $upload_dir = __DIR__ . '/uploads';
+    $destino = $upload_dir . '/' . $novo_nome;
+
+    if (!is_dir($upload_dir)) {
+        mkdir($upload_dir, 0755, true);
+    }
 
     if (!move_uploaded_file($arquivo['tmp_name'], $destino)) {
         $erro = "Erro ao salvar o arquivo no servidor.";
         return null;
     }
 
-    return ['caminho' => 'assets/posts/' . $novo_nome, 'tipo' => $categoria];
+    return ['caminho' => 'uploads/' . $novo_nome, 'tipo' => $categoria];
 }
 /**
  * Cria uma notificação para o usuário $usuario_id, avisando que $remetente_id

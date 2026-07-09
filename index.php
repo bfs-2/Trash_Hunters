@@ -119,67 +119,11 @@ foreach ($notificacoes as $n) {
 
 <body>
 
-
     <!-- =====================================================
                         CABEÇALHO
     ====================================================== -->
 
-    <header class="topbar">
-
-        <div class="logo">
-
-            <i class="fa-solid fa-recycle"></i>
-
-            <h1>Trash Hunters</h1>
-
-        </div>
-
-        <div class="search">
-
-            <input type="text"
-                placeholder="Pesquisar usuários, postagens ou hashtags...">
-
-            <button>
-
-                <i class="fa-solid fa-magnifying-glass"></i>
-
-            </button>
-
-        </div>
-
-        <div class="top-icons">
-
-            <button id="botao-notificacoes" style="position:relative;">
-
-                <i class="fa-regular fa-bell"></i>
-
-                <?php if ($nao_lidas_interacoes > 0): ?>
-                    <span class="icon-badge"><?php echo $nao_lidas_interacoes; ?></span>
-                <?php endif; ?>
-
-            </button>
-
-            <button onclick="window.location='mensagens.php'" style="position:relative;">
-
-                <i class="fa-regular fa-envelope"></i>
-
-                <?php if ($nao_lidas_mensagens > 0): ?>
-                    <span class="icon-badge"><?php echo $nao_lidas_mensagens; ?></span>
-                <?php endif; ?>
-
-            </button>
-
-            <button onclick="window.location='editar_perfil.php'">
-
-                <img src="<?php echo avatar_url($eu['avatar'], $eu['nome']); ?>" alt="<?php echo htmlspecialchars($eu['nome']); ?>">
-
-            </button>
-
-        </div>
-
-    </header>
-
-
+    <?php include 'components/header-topbar.php'; ?>
 
     <!-- =====================================================
                         CONTAINER
@@ -416,15 +360,16 @@ foreach ($notificacoes as $n) {
                     FEED DE POSTAGENS (dados reais do banco)
             =============================== -->
 
-            <?php if (empty($posts)): ?>
+            <section class="posts-list" id="postsList">
+                <?php if (empty($posts)): ?>
 
-                <p class="empty-state">Nenhuma postagem ainda. Seja o primeiro a compartilhar uma missão!</p>
+                    <p class="empty-state">Nenhuma postagem ainda. Seja o primeiro a compartilhar uma missão!</p>
 
-            <?php else: ?>
+                <?php else: ?>
 
-                <?php foreach ($posts as $post): ?>
+                    <?php foreach ($posts as $post): ?>
 
-                <article class="post" id="post-<?php echo $post['id']; ?>">
+                    <article class="post" id="post-<?php echo $post['id']; ?>">
 
                     <div class="post-top">
 
@@ -434,7 +379,7 @@ foreach ($notificacoes as $n) {
 
                             <h3><?php echo htmlspecialchars($post['autor_nome']); ?></h3>
 
-                            <span><?php echo tempo_relativo($post['data_criacao']); ?></span>
+                            <span data-created="<?php echo htmlspecialchars($post['data_criacao']); ?>"><?php echo tempo_relativo($post['data_criacao']); ?></span>
 
                         </div>
 
@@ -510,9 +455,10 @@ foreach ($notificacoes as $n) {
 
                 </article>
 
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
 
-            <?php endif; ?>
+                <?php endif; ?>
+            </section>
 
 
         </section>

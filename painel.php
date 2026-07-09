@@ -24,13 +24,14 @@ $outras_postagens = $result_outros->fetch_all(MYSQLI_ASSOC);
 </head>
 <body>
     <div class="painel-container">
-        <header class="painel-header">
-            <div>
-                <h1>Painel do Usuário</h1>
-                <p>Bem-vindo ao painel, <?php echo htmlspecialchars($_SESSION['nome']); ?>!</p>
-            </div>
-            <a class="btn btn-primary" href="post/criar_post.php">Criar nova postagem</a>
-        </header>
+        <?php 
+        $titulo = 'Painel do Usuário';
+        $subtitulo = 'Bem-vindo ao painel, ' . htmlspecialchars($_SESSION['nome']) . '!';
+        $botao_texto = 'Criar nova postagem';
+        $botao_link = 'post/criar_post.php';
+        $botao_tipo = 'primary';
+        include 'components/header-painel.php'; 
+        ?>
 
         <section class="posts-section">
             <h2>Minhas postagens</h2>

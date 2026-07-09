@@ -13,13 +13,14 @@ include '../conexao.php';
 </head>
 <body>
     <div class="painel-container">
-        <header class="painel-header">
-            <div>
-                <h1>Criar Post</h1>
-                <p>Escreva seu título e seu conteúdo para publicar.</p>
-            </div>
-            <a class="btn btn-secondary" href="../painel.php">Voltar</a>
-        </header>
+        <?php 
+        $titulo = 'Criar Post';
+        $subtitulo = 'Escreva seu título e seu conteúdo para publicar.';
+        $botao_texto = 'Voltar';
+        $botao_link = '../painel.php';
+        $botao_tipo = 'secondary';
+        include '../components/header-painel.php'; 
+        ?>
 
         <main class="form-card">
             <form action="salvar_postagem.php" method="POST" class="post-form" enctype="multipart/form-data">
