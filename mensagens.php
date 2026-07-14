@@ -153,6 +153,6 @@ if ($usuario_id > 0) {
         </main>
 
     </div>
-
+  <script src="script.js"></script>
 </body>
 </html>

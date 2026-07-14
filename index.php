@@ -11,7 +11,7 @@ $eu = $stmt_eu->get_result()->fetch_assoc();
 
 // Todos os posts, do mais novo pro mais antigo, com dados de quem publicou
 $stmt_posts = $mysqli->prepare(
-    "SELECT p.id, p.titulo, p.conteudo, p.midia, p.midia_tipo, p.data_criacao,
+    "SELECT p.id, p.usuario_id ,p.titulo, p.conteudo, p.midia, p.midia_tipo, p.data_criacao,
             u.id AS autor_id, u.nome AS autor_nome, u.avatar AS autor_avatar
      FROM posts p
      JOIN usuarios u ON p.usuario_id = u.id
@@ -39,9 +39,14 @@ foreach ($posts as &$post) {
          WHERE c.post_id = ?
          ORDER BY c.id ASC"
     );
-    $stmt_coment->bind_param("i", $post['id']);
+   $stmt_coment->bind_param("i", $post['id']);
     $stmt_coment->execute();
     $post['comentarios'] = $stmt_coment->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    $stmt_midias = $mysqli->prepare("SELECT caminho, tipo FROM post_midias WHERE post_id = ? ORDER BY ordem ASC");
+    $stmt_midias->bind_param("i", $post['id']);
+    $stmt_midias->execute();
+    $post['midias'] = $stmt_midias->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 unset($post);
 
@@ -71,6 +76,18 @@ $stmt_notif = $mysqli->prepare(
      ORDER BY n.id DESC
      LIMIT 20"
 );
+
+
+$pontos = $mysqli->query("
+    SELECT *
+    FROM pontos_coleta
+    ORDER BY cidade
+    LIMIT 5
+");
+?>
+
+<?php
+
 $stmt_notif->bind_param("i", $eu['id']);
 $stmt_notif->execute();
 $notificacoes = $stmt_notif->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -124,6 +141,7 @@ foreach ($notificacoes as $n) {
     ====================================================== -->
 
     <?php include 'components/header-topbar.php'; ?>
+    
 
     <!-- =====================================================
                         CONTAINER
@@ -197,31 +215,20 @@ foreach ($notificacoes as $n) {
 
                     </li>
 
-                    <li>
-
-                        <a href="#">
-
-                            <i class="fa-solid fa-compass"></i>
-
-                            Explorar
-
+                   <li>
+                        <a href="#" id="openPontosModal">
+                            <i class="fa-solid fa-location-dot"></i>
+                            Pontos de Coleta
                         </a>
-
                     </li>
 
-                    <li>
-
-                        <a href="#">
-
-                            <i class="fa-solid fa-bookmark"></i>
-
-                            Salvos
-
-                        </a>
-
-                    </li>
-
-                    <li>
+                  <li>
+    <a href="salvos.php">
+        <i class="fa-solid fa-bookmark"></i>
+        Salvos
+    </a>
+</li>
+                                                <li>
 
                         <a href="editar_perfil.php">
 
@@ -277,17 +284,15 @@ foreach ($notificacoes as $n) {
 
                     </div>
 
-                    <input type="file" name="midia" id="midia-input" accept="image/*,video/*" style="display:none;">
+                    <input type="file" name="midia[]" id="midia-input" accept="image/*,video/*" multiple style="display:none;">
 
-                    <div id="midia-preview" style="display:none;">
+<div id="midia-preview" style="display:none;">
 
-                        <img id="midia-preview-imagem" style="display:none;max-width:100%;border-radius:12px;margin-top:10px;">
+    <div id="midia-preview-grid" class="midia-preview-grid"></div>
 
-                        <video id="midia-preview-video" style="display:none;max-width:100%;border-radius:12px;margin-top:10px;" controls></video>
+    <span id="midia-preview-contador" class="midia-preview-contador"></span>
 
-                        <button type="button" id="midia-remover" style="margin-top:6px;">Remover mídia</button>
-
-                    </div>
+</div>
 
                     <div class="post-actions">
 
@@ -329,32 +334,6 @@ foreach ($notificacoes as $n) {
 
 
 
-            <!-- ==============================
-                    CARD INFORMATIVO
-            =============================== -->
-
-            <section class="eco-card">
-
-                <div class="eco-icon">
-
-                    🌎
-
-                </div>
-
-                <div>
-
-                    <h3>Você sabia?</h3>
-
-                    <p>
-
-                        Uma única garrafa PET pode levar cerca de
-                        <strong>450 anos</strong> para se decompor na natureza.
-
-                    </p>
-
-                </div>
-
-            </section>
 
             <!-- ==============================
                     FEED DE POSTAGENS (dados reais do banco)
@@ -369,31 +348,77 @@ foreach ($notificacoes as $n) {
 
                     <?php foreach ($posts as $post): ?>
 
-                    <article class="post" id="post-<?php echo $post['id']; ?>">
+                    <article class="post" id="post-<?php echo $post['id']; ?>" data-post-id="<?php echo $post['id']; ?>">
 
-                    <div class="post-top">
+                  <div class="post-top">
 
-                        <img src="<?php echo avatar_url($post['autor_avatar'], $post['autor_nome']); ?>" alt="<?php echo htmlspecialchars($post['autor_nome']); ?>">
+    <img src="<?php echo avatar_url($post['autor_avatar'], $post['autor_nome']); ?>" alt="<?php echo htmlspecialchars($post['autor_nome']); ?>">
 
-                        <div>
+    <div>
 
-                            <h3><?php echo htmlspecialchars($post['autor_nome']); ?></h3>
+        <h3><?php echo htmlspecialchars($post['autor_nome']); ?></h3>
 
-                            <span data-created="<?php echo htmlspecialchars($post['data_criacao']); ?>"><?php echo tempo_relativo($post['data_criacao']); ?></span>
+        <span data-created="<?php echo htmlspecialchars($post['data_criacao']); ?>">
+            <?php echo tempo_relativo($post['data_criacao']); ?>
+        </span>
 
-                        </div>
+    </div>
 
-                    </div>
+    <div class="post-menu">
+
+        <button class="post-menu-btn">
+
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+
+        </button>
+
+        <div class="post-menu-options">
+
+            <a href="salvar_post.php?id=<?php echo $post['id']; ?>">
+                Salvar publicação
+            </a>
+
+            <?php if ($post['usuario_id'] == $_SESSION['id']): ?>
+
+                <a href="excluir_post.php?id=<?php echo $post['id']; ?>"
+                   onclick="return confirm('Deseja excluir esta publicação?')">
+                    Excluir publicação
+                </a>
+
+            <?php endif; ?>
+
+        </div>
+
+    </div>
+
+</div>
 
                     <p><?php echo nl2br(htmlspecialchars($post['conteudo'])); ?></p>
 
-                    <?php if (!empty($post['midia'])): ?>
-                        <?php if ($post['midia_tipo'] === 'video'): ?>
-                            <video class="post-media" src="<?php echo htmlspecialchars($post['midia']); ?>" controls></video>
-                        <?php else: ?>
-                            <img class="post-media post-image" src="<?php echo htmlspecialchars($post['midia']); ?>" alt="Imagem da postagem">
-                        <?php endif; ?>
+                   <?php if (!empty($post['midias'])): ?>
+    <?php $qtd_midias = count($post['midias']); ?>
+    <div class="post-gallery" data-count="<?php echo $qtd_midias; ?>">
+        <div class="gallery-grid">
+            <?php foreach ($post['midias'] as $i => $m): ?>
+                <div class="gallery-item" data-index="<?php echo $i; ?>" data-type="<?php echo $m['tipo']; ?>">
+                    <?php if ($m['tipo'] === 'video'): ?>
+                        <video class="gallery-media" src="<?php echo htmlspecialchars($m['caminho']); ?>" preload="metadata"></video>
+                        <div class="video-overlay"><i class="fa-solid fa-play"></i></div>
+                    <?php else: ?>
+                        <img class="gallery-media" src="<?php echo htmlspecialchars($m['caminho']); ?>" alt="Imagem da postagem">
                     <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        </div>
+      
+    </div>
+<?php elseif (!empty($post['midia'])): ?>
+    <?php if ($post['midia_tipo'] === 'video'): ?>
+        <video class="post-media" src="<?php echo htmlspecialchars($post['midia']); ?>" controls></video>
+    <?php else: ?>
+        <img class="post-media post-image" src="<?php echo htmlspecialchars($post['midia']); ?>" alt="Imagem da postagem">
+    <?php endif; ?>
+<?php endif; ?>
 
                     <div class="post-footer">
 
@@ -468,130 +493,37 @@ foreach ($notificacoes as $n) {
         <!-- ==========================================
                 COLUNA DIREITA
         =========================================== -->
+<aside class="right-sidebar">
+       <section class="trending">
+    <h2>
+        🌱 Dica Ambiental
+    </h2>
+    <p id="ecoTipText" class="eco-tip-text"></p>
+</section>
 
-        <aside class="right-sidebar">
-
-            <!-- Tendências -->
-
-            <section class="trending">
-
-                <h2>
-
-                    🔥 Em alta
-
-                </h2>
-
-                <ul>
-
-                    <li>
-
-                        #PraiaLimpa
-
-                    </li>
-
-                    <li>
-
-                        #TrashHunters
-
-                    </li>
-
-                    <li>
-
-                        #Reciclagem
-
-                    </li>
-
-                    <li>
-
-                        #MeioAmbiente
-
-                    </li>
-
-                    <li>
-
-                        #ColetaSeletiva
-
-                    </li>
-
-                </ul>
-
-            </section>
-
-
-
-            <!-- Notícias -->
-
-            <section class="news">
-
-                <h2>
-
-                    📰 Notícias Ambientais
-
-                </h2>
-
-                <div class="news-card">
-
-                    <h4>
-
-                        Reciclar alumínio economiza até 95% de energia.
-
-                    </h4>
-
-                    <p>
-
-                        Separar corretamente as latinhas reduz o consumo de
-                        recursos naturais e ajuda a diminuir a emissão de CO₂.
-
-                    </p>
-
-                </div>
-
-                <div class="news-card">
-
-                    <h4>
-
-                        Mais árvores, mais qualidade de vida.
-
-                    </h4>
-
-                    <p>
-
-                        Áreas verdes reduzem a temperatura das cidades e
-                        melhoram significativamente a qualidade do ar.
-
-                    </p>
-
-                </div>
-
-            </section>
-
-
+<section class="news">
+    <h2>📜 Fatos Históricos</h2>
+    <div class="news-card">
+        <p id="fatoHistorico1" class="fato-historico-text"></p>
+    </div>
+    <div class="news-card">
+        <p id="fatoHistorico2" class="fato-historico-text"></p>
+    </div>
+</section>
 
             <!-- Missão diária -->
 
-            <section class="daily-mission">
+         <section class="daily-mission">
 
-                <h2>
+    <h2>
 
-                    🎯 Missão do Dia
+        🎯 Missão do Dia
 
-                </h2>
+    </h2>
 
-                <p>
+    <p id="missaoDoDiaTexto"></p>
 
-                    Recolha pelo menos
-                    <strong>5 resíduos recicláveis</strong>
-                    e compartilhe sua missão no Trash Hunters.
-
-                </p>
-
-                <button>
-
-                    Ver Missões
-
-                </button>
-
-            </section>
+   
 
         </aside>
 
@@ -759,6 +691,62 @@ foreach ($notificacoes as $n) {
     </div>
 
 
+<!-- =====================================================
+                MODAL DE PONTOS DE COLETA
+===================================================== -->
+
+<div class="modal" id="pontosModal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h2>📍 Pontos de Coleta</h2>
+
+            <button class="close-modal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+        </div>
+
+        <div class="notification-list">
+
+            <?php while($ponto = $pontos->fetch_assoc()): ?>
+
+                <div class="notification-item">
+
+                    <div>
+
+                        <strong>
+                            <?= htmlspecialchars($ponto['nome']) ?>
+                        </strong>
+
+                        <span style="display:block; margin-top:5px;">
+                            📍 <?= htmlspecialchars($ponto['cidade']) ?>
+                        </span>
+
+                            <span style="display:block; color:var(--gray3);">
+                                <?= htmlspecialchars($ponto['materiais']) ?>
+                            </span>
+
+                        <a href="<?= htmlspecialchars($ponto['link_maps']) ?>"
+                           target="_blank"
+                           style="display:block; margin-top:8px; color:#58c758; font-weight:bold;">
+                            🗺 Ver rota
+                        </a>
+
+                    </div>
+
+                </div>
+
+            <?php endwhile; ?>
+
+        </div>
+
+    </div>
+
+</div>
+
 
     <!-- =====================================================
                     MODAL DE VISUALIZAÇÃO
@@ -777,71 +765,6 @@ foreach ($notificacoes as $n) {
             alt="Imagem">
 
     </div>
-
-
-
-    <!-- =====================================================
-                    PAINEL DE MENSAGENS
-    ====================================================== -->
-
-    <aside class="chat-panel">
-
-        <div class="chat-header">
-
-            <h2>
-
-                Mensagens
-
-            </h2>
-
-            <a href="mensagens.php" title="Ver todas as conversas">
-
-                <i class="fa-solid fa-pen"></i>
-
-            </a>
-
-        </div>
-
-
-
-        <div class="chat-users">
-
-            <?php if (empty($contatos_preview)): ?>
-
-                <p class="empty-state" style="padding:10px 0;">Ainda não há outros usuários cadastrados.</p>
-
-            <?php endif; ?>
-
-            <?php foreach ($contatos_preview as $contato): ?>
-
-            <a class="chat-user" href="mensagens.php?usuario_id=<?php echo $contato['id']; ?>">
-
-                <img src="<?php echo avatar_url($contato['avatar'], $contato['nome']); ?>" alt="<?php echo htmlspecialchars($contato['nome']); ?>">
-
-                <div>
-
-                    <strong>
-
-                        <?php echo htmlspecialchars($contato['nome']); ?>
-
-                    </strong>
-
-                    <span>
-
-                        <?php echo $contato['ultima_data'] ? tempo_relativo($contato['ultima_data']) : 'Iniciar conversa'; ?>
-
-                    </span>
-
-                </div>
-
-            </a>
-
-            <?php endforeach; ?>
-
-        </div>
-
-    </aside>
-
 
 
     <!-- =====================================================

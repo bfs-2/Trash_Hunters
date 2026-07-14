@@ -99,55 +99,66 @@ commentButtons.forEach((button, index) => {
                 BOTÃO VOLTAR AO TOPO
 ========================================================== */
 
-window.addEventListener("scroll", () => {
+if (backToTop) {
 
-    if (window.scrollY > 400) {
+    window.addEventListener("scroll", () => {
 
-        backToTop.classList.add("show");
+        if (window.scrollY > 400) {
 
-    } else {
+            backToTop.classList.add("show");
 
-        backToTop.classList.remove("show");
+        } else {
 
-    }
+            backToTop.classList.remove("show");
 
-});
-
-backToTop.addEventListener("click", () => {
-
-    window.scrollTo({
-
-        top: 0,
-
-        behavior: "smooth"
+        }
 
     });
 
-});
+    backToTop.addEventListener("click", () => {
+
+        window.scrollTo({
+
+            top: 0,
+
+            behavior: "smooth"
+
+        });
+
+    });
+
+}
 
 /* ==========================================================
                 BOTÃO NOVA POSTAGEM
 ========================================================== */
 
-floatingButton.addEventListener("click", () => {
+if (floatingButton) {
 
-    const textarea = document.querySelector(".new-post textarea");
+    floatingButton.addEventListener("click", () => {
 
-    if (textarea) {
+        const textarea = document.querySelector(".new-post textarea");
 
-        textarea.scrollIntoView({
+        if (textarea) {
 
-            behavior: "smooth",
+            textarea.scrollIntoView({
 
-            block: "center"
+                behavior: "smooth",
 
-        });
+                block: "center"
 
-        textarea.focus();
+            });
 
-    }
+            textarea.focus();
 
-});
+        }
+
+    });
+
+}
+
+
+
 
 /* ==========================================================
                 ANIMAÇÃO DOS POSTS
@@ -383,7 +394,7 @@ const previewModal=document.querySelector(".image-modal");
 
 const previewImage=document.getElementById("previewImage");
 
-const images=document.querySelectorAll(".post-image, .gallery img");
+const images=document.querySelectorAll(".post-image, .gallery img, .gallery-item img.gallery-media");
 
 images.forEach(image=>{
 
@@ -414,15 +425,19 @@ previewModal.classList.remove("active");
 
 }
 
-previewModal.addEventListener("click",(e)=>{
+if (previewModal) {
 
-if(e.target===previewModal){
+    previewModal.addEventListener("click",(e)=>{
 
-previewModal.classList.remove("active");
+        if(e.target===previewModal){
+
+            previewModal.classList.remove("active");
+
+        }
+
+    });
 
 }
-
-});
 
 
 /* ==========================================================
@@ -556,66 +571,40 @@ if (publishButton && postTextarea) {
 
 }
 
+
 /* ==========================================================
-                UPLOAD DE MÍDIA NA NOVA POSTAGEM
+        GALERIA DE FOTOS/VÍDEOS DO POST (grade estilo Facebook)
 ========================================================== */
 
-const midiaBotao = document.getElementById("midia-botao");
-const midiaPreview = document.getElementById("midia-preview");
-const midiaPreviewImagem = document.getElementById("midia-preview-imagem");
-const midiaPreviewVideo = document.getElementById("midia-preview-video");
-const midiaRemover = document.getElementById("midia-remover");
+document.querySelectorAll(".post-gallery").forEach(galeria => {
 
-if (midiaBotao && midiaInput) {
+    const itens = Array.from(galeria.querySelectorAll(".gallery-item"));
+    const total = itens.length;
 
-    midiaBotao.addEventListener("click", () => {
-        midiaInput.click();
-    });
+    if (total === 0) return;
 
-    midiaInput.addEventListener("change", () => {
+    const grid = galeria.querySelector(".gallery-grid");
+    grid.classList.add("layout-" + Math.min(total, 4));
 
-        const arquivo = midiaInput.files[0];
+    // Quando tem mais de 4 mídias, mostra só as 4 primeiras e
+    // coloca um "+N" em cima da última visível.
+    if (total > 4) {
 
-        if (!arquivo) return;
+        itens.forEach((item, i) => {
+            if (i >= 4) item.style.display = "none";
+        });
 
-        const tamanhoMaximo = arquivo.type.startsWith("video/") ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
+        const restante = total - 4;
+        const overlay = document.createElement("div");
+        overlay.className = "gallery-mais-overlay";
+        overlay.textContent = "+" + restante;
+        itens[3].appendChild(overlay);
 
-        if (arquivo.size > tamanhoMaximo) {
-            alert("Arquivo muito grande. O limite é " + (tamanhoMaximo / 1024 / 1024) + "MB.");
-            midiaInput.value = "";
-            return;
-        }
+    }
 
-        const url = URL.createObjectURL(arquivo);
+});
 
-        if (arquivo.type.startsWith("video/")) {
-            midiaPreviewVideo.src = url;
-            midiaPreviewVideo.style.display = "block";
-            midiaPreviewImagem.style.display = "none";
-        } else {
-            midiaPreviewImagem.src = url;
-            midiaPreviewImagem.style.display = "block";
-            midiaPreviewVideo.style.display = "none";
-        }
 
-        midiaPreview.style.display = "block";
-
-    });
-
-}
-
-if (midiaRemover) {
-
-    midiaRemover.addEventListener("click", () => {
-
-        midiaInput.value = "";
-        midiaPreview.style.display = "none";
-        midiaPreviewImagem.src = "";
-        midiaPreviewVideo.src = "";
-
-    });
-
-}
 
 /* ==========================================================
                 ENTER NO COMENTÁRIO
@@ -938,6 +927,94 @@ if (postsList) {
     setInterval(fetchNewPosts, 15000);
 }
 
+const openPontosModal = document.getElementById('openPontosModal');
+const pontosModal = document.getElementById('pontosModal');
+const closePontos = document.querySelector('#pontosModal .close-modal');
+
+if (openPontosModal && pontosModal) {
+
+    openPontosModal.addEventListener('click', function(e) {
+
+        e.preventDefault();
+
+        pontosModal.classList.add('active');
+
+    });
+
+}
+
+if (closePontos && pontosModal) {
+
+    closePontos.addEventListener('click', function() {
+
+        pontosModal.classList.remove('active');
+
+    });
+
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("Sistema iniciado.");
+});
+
+
+
+
+
+
+
+
+/* ==========================================
+        MENU DOS 3 PONTINHOS
+========================================== */
+
+document.querySelectorAll(".post-menu-btn").forEach(button => {
+
+    button.addEventListener("click", function(e) {
+
+        e.stopPropagation();
+
+        const menu = this.parentElement;
+
+        menu.classList.toggle("active");
+
+    });
+
+});
+
+document.addEventListener("click", () => {
+
+    document.querySelectorAll(".post-menu").forEach(menu => {
+
+        menu.classList.remove("active");
+
+    });
+
+});
+
+
+
+const openSalvosModal = document.getElementById("openSalvosModal");
+const salvosModal = document.getElementById("salvosModal");
+
+if (openSalvosModal && salvosModal) {
+
+    openSalvosModal.addEventListener("click", function(e) {
+
+        e.preventDefault();
+
+        salvosModal.classList.add("active");
+
+    });
+
+}
+
+
+
+
+
+
 /* ==========================================================
                 INICIALIZAÇÃO
 ========================================================== */
@@ -947,3 +1024,214 @@ document.addEventListener("DOMContentLoaded", () => {
     console.log("Sistema iniciado.");
 
 });
+
+
+/* ==========================================================
+                    DICA AMBIENTAL (ROTATIVA)
+========================================================== */
+
+const mensagensEco = [
+    "🌍 Uma garrafa PET pode levar até 450 anos para se decompor.",
+    "♻️ Reciclar uma lata de alumínio economiza até 95% da energia necessária para produzir uma nova.",
+    "💧 Fechar a torneira ao escovar os dentes pode economizar até 12 litros de água.",
+    "🌳 Uma árvore adulta pode absorver cerca de 22 kg de CO₂ por ano.",
+    "🔋 Pilhas e baterias nunca devem ser descartadas no lixo comum.",
+    "🛍️ Utilizar sacolas reutilizáveis reduz significativamente o consumo de plástico.",
+    "🚲 Trocar o carro pela bicicleta em pequenos trajetos reduz a emissão de poluentes.",
+    "📄 Reciclar uma tonelada de papel pode salvar até 20 árvores.",
+    "🌊 O plástico descartado incorretamente pode chegar aos oceanos e afetar a vida marinha.",
+    "🍃 Compostagem transforma resíduos orgânicos em adubo natural.",
+    "💡 Lâmpadas LED consomem menos energia e possuem maior durabilidade.",
+    "🚿 Reduzir o tempo do banho ajuda a economizar água e energia.",
+    "🌱 Plantar árvores ajuda a combater o aquecimento global.",
+    "🥤 Canudos descartáveis podem ser substituídos por opções reutilizáveis.",
+    "🗑️ Separar corretamente os resíduos facilita a reciclagem.",
+    "📱 Celulares antigos devem ser descartados em pontos de coleta eletrônica.",
+    "🌞 A energia solar é uma das fontes de energia mais limpas disponíveis.",
+    "🚯 Jogar lixo na rua contribui para enchentes e poluição urbana.",
+    "🐢 Animais marinhos frequentemente confundem plástico com alimento.",
+    "🏞️ Preservar áreas verdes melhora a qualidade do ar nas cidades.",
+    "♻️ O vidro pode ser reciclado infinitas vezes sem perder qualidade.",
+    "🧴 Embalagens de produtos de limpeza também podem ser recicladas.",
+    "🚰 Uma torneira pingando pode desperdiçar dezenas de litros de água por dia.",
+    "🌎 Pequenas atitudes sustentáveis fazem grande diferença para o planeta.",
+    "🤝 A conscientização ambiental começa com ações individuais e se fortalece na comunidade."
+];
+
+const ecoTipText = document.getElementById("ecoTipText");
+
+if (ecoTipText) {
+
+    let indiceEco = Math.floor(Math.random() * mensagensEco.length);
+    ecoTipText.textContent = mensagensEco[indiceEco];
+
+    setInterval(() => {
+
+        ecoTipText.classList.add("fade-out");
+
+        setTimeout(() => {
+
+            indiceEco = (indiceEco + 1) % mensagensEco.length;
+            ecoTipText.textContent = mensagensEco[indiceEco];
+            ecoTipText.classList.remove("fade-out");
+
+        }, 400);
+
+    }, 15000);
+
+}
+
+
+/* ==========================================================
+                    FATOS HISTÓRICOS (ROTATIVOS)
+========================================================== */
+
+const fatosHistoricos = [
+    "📜 1970 — Foi comemorado o primeiro Dia da Terra, dando início ao movimento ambiental moderno.",
+    "🌍 1972 — A Conferência de Estocolmo foi a primeira grande reunião mundial sobre meio ambiente.",
+    "♻️ 1988 — O símbolo internacional da reciclagem se popularizou mundialmente.",
+    "🌳 1992 — O Brasil sediou a ECO-92 no Rio de Janeiro, um dos maiores eventos ambientais da história.",
+    "🌎 1997 — Foi assinado o Protocolo de Kyoto para redução da emissão de gases poluentes.",
+    "🌱 2005 — O Protocolo de Kyoto entrou oficialmente em vigor.",
+    "🐢 2015 — 193 países aprovaram os Objetivos de Desenvolvimento Sustentável da ONU.",
+    "🌡️ 2015 — O Acordo de Paris foi criado para combater as mudanças climáticas.",
+    "♻️ 2017 — O Quênia proibiu sacolas plásticas, tornando-se referência mundial.",
+    "🐋 1986 — Entrou em vigor a moratória internacional da caça comercial às baleias.",
+    "🌳 1962 — O livro 'Primavera Silenciosa' alertou o mundo sobre os impactos dos pesticidas.",
+    "🌍 1987 — O Protocolo de Montreal iniciou o combate aos gases que destruíam a camada de ozônio.",
+    "☀️ 2016 — A energia solar tornou-se a fonte energética que mais cresceu no mundo.",
+    "🌲 2019 — Milhões de pessoas participaram das greves globais pelo clima.",
+    "🌎 2022 — O Brasil ultrapassou 20 GW de capacidade instalada em energia solar."
+];
+
+const fatoHistorico1 = document.getElementById("fatoHistorico1");
+const fatoHistorico2 = document.getElementById("fatoHistorico2");
+
+if (fatoHistorico1 && fatoHistorico2) {
+
+    let indiceFato = Math.floor(Math.random() * fatosHistoricos.length);
+
+    function mostrarFatos(i) {
+        fatoHistorico1.textContent = fatosHistoricos[i % fatosHistoricos.length];
+        fatoHistorico2.textContent = fatosHistoricos[(i + 1) % fatosHistoricos.length];
+    }
+
+    mostrarFatos(indiceFato);
+
+    setInterval(() => {
+
+        fatoHistorico1.classList.add("fade-out");
+        fatoHistorico2.classList.add("fade-out");
+
+        setTimeout(() => {
+
+            indiceFato = (indiceFato + 2) % fatosHistoricos.length;
+            mostrarFatos(indiceFato);
+
+            fatoHistorico1.classList.remove("fade-out");
+            fatoHistorico2.classList.remove("fade-out");
+
+        }, 400);
+
+    }, 15000);
+
+}
+
+/* ==========================================================
+                    MODO ESCURO
+========================================================== */
+
+const themeToggle = document.getElementById("theme-toggle");
+
+function aplicarIconeTema(escuroAtivo) {
+    if (!themeToggle) return;
+    const icon = themeToggle.querySelector("i");
+    if (escuroAtivo) {
+        icon.classList.remove("fa-moon");
+        icon.classList.add("fa-sun");
+    } else {
+        icon.classList.remove("fa-sun");
+        icon.classList.add("fa-moon");
+    }
+}
+
+const temaSalvo = localStorage.getItem("tema");
+if (temaSalvo === "dark") {
+    document.body.classList.add("dark-mode");
+}
+aplicarIconeTema(document.body.classList.contains("dark-mode"));
+
+if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
+        const escuroAtivo = document.body.classList.contains("dark-mode");
+        localStorage.setItem("tema", escuroAtivo ? "dark" : "light");
+        aplicarIconeTema(escuroAtivo);
+    });
+}
+
+/* ==========================================================
+                MISSÃO DO DIA (1 por dia, 31 no total)
+========================================================== */
+
+const missoesDoDia = [
+    "Recolha pelo menos <strong>5 resíduos recicláveis</strong> e compartilhe sua missão no Trash Hunters.",
+    "Separe o lixo <strong>orgânico do reciclável</strong> em casa hoje.",
+    "Leve suas <strong>pilhas usadas</strong> a um ponto de coleta.",
+    "Reutilize uma <strong>embalagem</strong> em vez de jogar fora.",
+    "Ande a pé ou de bicicleta em vez de usar o <strong>carro</strong> hoje.",
+    "Recolha <strong>3 garrafas PET</strong> pelo caminho e destine à reciclagem.",
+    "Plante ou regue uma <strong>muda de árvore</strong>.",
+    "Evite usar <strong>sacolas plásticas</strong> nas compras de hoje.",
+    "Limpe um <strong>espaço público</strong> perto de você (praça, calçada, praia).",
+    "Separe <strong>papelão</strong> para reciclagem.",
+    "Doe uma <strong>peça de roupa</strong> que você não usa mais.",
+    "Reduza o tempo do <strong>banho em 2 minutos</strong> hoje.",
+    "Feche a <strong>torneira</strong> ao escovar os dentes.",
+    "Leve um <strong>copo reutilizável</strong> em vez de descartável.",
+    "Recolha e descarte corretamente <strong>1 pilha ou bateria</strong>.",
+    "Compartilhe uma <strong>dica ambiental</strong> com um amigo.",
+    "Separe <strong>vidro</strong> para reciclagem.",
+    "Evite <strong>imprimir</strong> documentos desnecessários hoje.",
+    "Leve <strong>eletrônicos antigos</strong> a um ponto de coleta eletrônica.",
+    "Recolha lixo encontrado em uma <strong>trilha ou parque</strong>.",
+    "Use as <strong>duas faces do papel</strong> antes de descartar.",
+    "Desligue aparelhos da <strong>tomada</strong> quando não estiver usando.",
+    "Recolha ao menos <strong>5 resíduos recicláveis</strong> pelo bairro.",
+    "Plante uma <strong>horta ou vaso</strong> em casa.",
+    "Evite o <strong>desperdício de comida</strong> hoje.",
+    "Compre de um <strong>produtor local</strong> ou orgânico.",
+    "Recicle uma <strong>caixa de papelão</strong>.",
+    "Ajude a organizar uma <strong>coleta seletiva</strong> no seu prédio ou rua.",
+    "Reduza o uso de <strong>canudos e talheres descartáveis</strong> hoje.",
+    "Publique uma foto de uma <strong>ação sustentável</strong> no Trash Hunters.",
+    "Faça um balanço do mês: <strong>quantos resíduos</strong> você recolheu?"
+];
+
+const missaoTexto = document.getElementById("missaoDoDiaTexto");
+
+if (missaoTexto) {
+
+    function atualizarMissaoDoDia() {
+        const hoje = new Date();
+        const dia = hoje.getDate(); // 1 a 31
+        missaoTexto.innerHTML = missoesDoDia[dia - 1];
+    }
+
+    atualizarMissaoDoDia();
+
+    // Confere a cada minuto se o dia virou, pra trocar sozinho sem precisar recarregar
+    let diaAtual = new Date().getDate();
+
+    setInterval(() => {
+
+        const diaAgora = new Date().getDate();
+
+        if (diaAgora !== diaAtual) {
+            diaAtual = diaAgora;
+            atualizarMissaoDoDia();
+        }
+
+    }, 60000);
+
+}

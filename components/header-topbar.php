@@ -38,8 +38,12 @@ $nao_lidas_mensagens = $nao_lidas_mensagens ?? 0;
         </button>
     </div>
     <?php endif; ?>
+<div class="top-icons">
 
-    <div class="top-icons">
+        <button type="button" id="theme-toggle" class="theme-toggle-btn" title="Alternar modo escuro">
+            <i class="fa-solid fa-moon"></i>
+        </button>
+
         <?php if (!empty($botao_voltar)): ?>
             <!-- Modo simplificado: botão voltar -->
             <a href="<?php echo $botao_voltar; ?>" class="btn btn-secondary">

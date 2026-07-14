@@ -168,17 +168,12 @@
 
                     </li>
 
-                    <li>
-
-                        <a href="#">
-
-                            <i class="fa-solid fa-bookmark"></i>
-
-                            Salvos
-
-                        </a>
-
-                    </li>
+                   <li>
+                                <a href="#" id="abrirSalvos">
+                                    <i class="fa-solid fa-bookmark"></i>
+                                    Salvos
+                                </a>
+                            </li>
 
                     <li>
 
@@ -896,27 +891,19 @@
                     PAINEL DE MENSAGENS
     ====================================================== -->
 
-    <aside class="chat-panel">
+    <div class="chat-header">
 
-        <div class="chat-header">
+    <h2>
+        Mensagens
+    </h2>
 
-            <h2>
+    <button id="toggle-chat" class="toggle-chat">
+        <i class="fa-solid fa-minus"></i>
+    </button>
 
-                Mensagens
+</div>
 
-            </h2>
-
-            <button>
-
-                <i class="fa-solid fa-pen"></i>
-
-            </button>
-
-        </div>
-
-
-
-        <div class="chat-users">
+<div class="chat-users" id="chat-users">
 
             <div class="chat-user">
 
@@ -1080,6 +1067,61 @@
 
     </footer>
 
+<!-- ==========================
+        MODAL SALVOS
+=========================== -->
+
+<div class="modal" id="salvosModal">
+
+    <div class="modal-content salvos-content">
+
+        <button class="close-modal">&times;</button>
+
+        <h2>Publicações Salvas</h2>
+
+        <div class="salvos-grid">
+
+            <?php if(empty($posts_salvos)): ?>
+
+                <p>Nenhuma publicação salva.</p>
+
+            <?php else: ?>
+
+                <?php foreach($posts_salvos as $post): ?>
+
+                    <div class="salvo-card">
+
+                        <?php if(!empty($post['midia'])): ?>
+
+                            <img src="<?= htmlspecialchars($post['midia']) ?>">
+
+                        <?php endif; ?>
+
+                        <h3><?= htmlspecialchars($post['autor']) ?></h3>
+
+                        <p><?= htmlspecialchars($post['conteudo']) ?></p>
+
+                        <small>
+                            <?= date('d/m/Y H:i', strtotime($post['data_criacao'])) ?>
+                        </small>
+
+                    </div>
+
+                <?php endforeach; ?>
+
+            <?php endif; ?>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+    
 
 
     <!-- =====================================================
@@ -1087,7 +1129,7 @@
     ====================================================== -->
 
    <script src="script.js"></script>
-
+   
 </body>
 
 </html>

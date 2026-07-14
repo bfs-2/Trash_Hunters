@@ -270,5 +270,49 @@ h1{
     margin-bottom: 24px;
     font-weight: 600;
 }
+.post-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
 
+.post-options{
+    position:relative;
+}
+
+.options-btn{
+    border:none;
+    background:none;
+    font-size:22px;
+    cursor:pointer;
+    padding:5px;
+}
+
+.options-menu{
+    display:none;
+    position:absolute;
+    right:0;
+    top:35px;
+    background:white;
+    border-radius:12px;
+    box-shadow:0 4px 15px rgba(0,0,0,.2);
+    overflow:hidden;
+    min-width:180px;
+    z-index:1000;
+}
+
+.options-menu.active{
+    display:block;
+}
+
+.options-menu a{
+    display:block;
+    padding:12px;
+    color:black;
+    text-decoration:none;
+}
+
+.options-menu a:hover{
+    background:#f3f3f3;
+}
 }
