@@ -1,8 +1,8 @@
 <?php
 
-$host = "127.0.0.1";
+$host = "localhost:3306";
 $usuario = "root";
-$senha = "beatriz22";
+$senha = "0000";
 $database = "login";
 
 $mysqli = new mysqli($host, $usuario, $senha, $database);

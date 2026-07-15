@@ -133,29 +133,7 @@ if (backToTop) {
                 BOTÃO NOVA POSTAGEM
 ========================================================== */
 
-if (floatingButton) {
 
-    floatingButton.addEventListener("click", () => {
-
-        const textarea = document.querySelector(".new-post textarea");
-
-        if (textarea) {
-
-            textarea.scrollIntoView({
-
-                behavior: "smooth",
-
-                block: "center"
-
-            });
-
-            textarea.focus();
-
-        }
-
-    });
-
-}
 
 
 
@@ -241,15 +219,25 @@ commentInputs.forEach(inputArea => {
 
             const avatarSrc = data.avatar ? data.avatar : ("https://ui-avatars.com/api/?background=1f6f4a&color=fff&name=" + encodeURIComponent(data.nome));
 
-            const newComment = document.createElement("div");
-            newComment.className = "comment";
-            newComment.innerHTML = `
-                <img src="${avatarSrc}" alt="${data.nome}">
-                <div>
-                    <strong>${data.nome}</strong>
-                    <p>${data.conteudo}</p>
-                </div>
-            `;
+           const newComment = document.createElement("div");
+newComment.className = "comment";
+newComment.dataset.commentId = data.id;
+newComment.innerHTML = `
+    <img src="${avatarSrc}" alt="${data.nome}">
+    <div>
+        <strong>${data.nome}</strong>
+        <p class="comment-text">${data.conteudo}</p>
+    </div>
+    <div class="post-menu comment-menu">
+        <button class="post-menu-btn" type="button">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+        <div class="post-menu-options">
+            <a href="#" class="editar-comentario-btn">Editar comentário</a>
+            <a href="#" class="excluir-comentario-btn">Excluir comentário</a>
+        </div>
+    </div>
+`;
 
             inputArea.parentNode.insertBefore(newComment, inputArea);
             input.value = "";
@@ -304,6 +292,8 @@ closeButtons.forEach(button=>{
 
         });
 
+        document.body.style.overflow = "auto";
+
     });
 
 });
@@ -320,6 +310,8 @@ document.querySelectorAll(".modal").forEach(modal=>{
         if(e.target===modal){
 
             modal.classList.remove("active");
+
+            document.body.style.overflow = "auto";
 
         }
 
@@ -571,6 +563,125 @@ if (publishButton && postTextarea) {
 
 }
 
+/* ==========================================================
+                UPLOAD DE MÍDIA NA NOVA POSTAGEM
+========================================================== */
+
+const midiaBotao = document.getElementById("midia-botao");
+const midiaPreview = document.getElementById("midia-preview");
+const midiaPreviewGrid = document.getElementById("midia-preview-grid");
+const midiaPreviewContador = document.getElementById("midia-preview-contador");
+
+const LIMITE_MIDIAS = 5;
+const LIMITE_IMAGEM = 5 * 1024 * 1024;   // 5MB
+const LIMITE_VIDEO = 25 * 1024 * 1024;   // 25MB
+
+if (midiaBotao && midiaInput) {
+
+    // Clicar no botão "Foto/Vídeo" abre o seletor de arquivos escondido
+    midiaBotao.addEventListener("click", () => {
+        midiaInput.click();
+    });
+
+    midiaInput.addEventListener("change", () => {
+
+        const arquivos = Array.from(midiaInput.files || []);
+
+        if (arquivos.length === 0) {
+            midiaPreview.style.display = "none";
+            return;
+        }
+
+        if (arquivos.length > LIMITE_MIDIAS) {
+            alert("Você pode enviar no máximo " + LIMITE_MIDIAS + " arquivos por publicação.");
+            limparArquivo(arquivos.length - 1);
+            return;
+        }
+
+        // Validação: tipo e tamanho de cada arquivo
+        for (const arquivo of arquivos) {
+            const isVideo = arquivo.type.startsWith("video/");
+            const limite = isVideo ? LIMITE_VIDEO : LIMITE_IMAGEM;
+
+            if (!arquivo.type.startsWith("image/") && !isVideo) {
+                alert("Formato não suportado: " + arquivo.name);
+                limparArquivo(arquivos.indexOf(arquivo));
+                return;
+            }
+
+            if (arquivo.size > limite) {
+                alert("\"" + arquivo.name + "\" é muito grande. O limite é " + (limite / 1024 / 1024) + "MB.");
+                limparArquivo(arquivos.indexOf(arquivo));
+                return;
+            }
+        }
+
+        renderizarPreview(arquivos);
+
+    });
+
+}
+
+function renderizarPreview(arquivos) {
+
+    midiaPreviewGrid.innerHTML = "";
+
+    arquivos.forEach((arquivo, index) => {
+
+        const url = URL.createObjectURL(arquivo);
+        const item = document.createElement("div");
+        item.className = "midia-preview-item";
+
+        // Se for vídeo, cria elemento <video>, senão <img>
+        if (arquivo.type.startsWith("video/")) {
+            const video = document.createElement("video");
+            video.src = url;
+            video.muted = true;
+            item.appendChild(video);
+        } else {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = "Pré-visualização";
+            item.appendChild(img);
+        }
+
+        // Botão para remover arquivo individual
+        const remover = document.createElement("div");
+        remover.className = "midia-preview-remover";
+        remover.innerHTML = "&times;";
+        remover.addEventListener("click", () => limparArquivo(index));
+        item.appendChild(remover);
+
+        midiaPreviewGrid.appendChild(item);
+
+    });
+
+    // Atualiza contador de arquivos
+    midiaPreviewContador.textContent = arquivos.length + 
+        (arquivos.length === 1 ? " arquivo selecionado" : " arquivos selecionados");
+    midiaPreview.style.display = "block";
+
+}
+
+// Remove um único arquivo da seleção (reconstrói FileList com DataTransfer)
+function limparArquivo(indexParaRemover) {
+
+    const arquivosRestantes = Array.from(midiaInput.files || [])
+        .filter((_, i) => i !== indexParaRemover);
+
+    const dataTransfer = new DataTransfer();
+    arquivosRestantes.forEach(arquivo => dataTransfer.items.add(arquivo));
+    midiaInput.files = dataTransfer.files;
+
+    if (arquivosRestantes.length > 0) {
+        renderizarPreview(arquivosRestantes);
+    } else {
+        midiaPreviewGrid.innerHTML = "";
+        midiaPreview.style.display = "none";
+    }
+
+}
+
 
 /* ==========================================================
         GALERIA DE FOTOS/VÍDEOS DO POST (grade estilo Facebook)
@@ -757,12 +868,12 @@ function createPostElement(post) {
     `;
 
     const commentsSection = article.querySelector('.comments');
-    commentsSection.innerHTML = `
-        <div class="comment-input" data-post-id="${post.id}">
-            <input type="text" placeholder="Escreva um comentário...">
-            <button>Enviar</button>
-        </div>
-    `;
+   commentsSection.innerHTML = `
+    <div class="comment-input" data-post-id="${post.id}">
+        <input type="text" placeholder="Escreva um comentário...">
+        <button>Enviar</button>
+    </div>
+`;
     commentsSection.style.display = 'none';
 
     return article;
@@ -969,27 +1080,25 @@ document.addEventListener("DOMContentLoaded", () => {
         MENU DOS 3 PONTINHOS
 ========================================== */
 
-document.querySelectorAll(".post-menu-btn").forEach(button => {
+document.addEventListener("click", (e) => {
 
-    button.addEventListener("click", function(e) {
+    const botaoMenu = e.target.closest(".post-menu-btn");
+    const menuClicado = botaoMenu ? botaoMenu.parentElement : null;
 
-        e.stopPropagation();
-
-        const menu = this.parentElement;
-
-        menu.classList.toggle("active");
-
-    });
-
-});
-
-document.addEventListener("click", () => {
-
+    // Fecha todos os menus abertos, exceto o que acabou de ser clicado
+    // (esse é tratado logo abaixo, com o toggle).
     document.querySelectorAll(".post-menu").forEach(menu => {
 
-        menu.classList.remove("active");
+        if (menu !== menuClicado) {
+            menu.classList.remove("active");
+        }
 
     });
+
+    if (botaoMenu) {
+        e.stopPropagation();
+        menuClicado.classList.toggle("active");
+    }
 
 });
 
@@ -1175,37 +1284,37 @@ if (themeToggle) {
 ========================================================== */
 
 const missoesDoDia = [
-    "Recolha pelo menos <strong>5 resíduos recicláveis</strong> e compartilhe sua missão no Trash Hunters.",
-    "Separe o lixo <strong>orgânico do reciclável</strong> em casa hoje.",
-    "Leve suas <strong>pilhas usadas</strong> a um ponto de coleta.",
-    "Reutilize uma <strong>embalagem</strong> em vez de jogar fora.",
-    "Ande a pé ou de bicicleta em vez de usar o <strong>carro</strong> hoje.",
-    "Recolha <strong>3 garrafas PET</strong> pelo caminho e destine à reciclagem.",
-    "Plante ou regue uma <strong>muda de árvore</strong>.",
-    "Evite usar <strong>sacolas plásticas</strong> nas compras de hoje.",
-    "Limpe um <strong>espaço público</strong> perto de você (praça, calçada, praia).",
-    "Separe <strong>papelão</strong> para reciclagem.",
-    "Doe uma <strong>peça de roupa</strong> que você não usa mais.",
-    "Reduza o tempo do <strong>banho em 2 minutos</strong> hoje.",
-    "Feche a <strong>torneira</strong> ao escovar os dentes.",
-    "Leve um <strong>copo reutilizável</strong> em vez de descartável.",
-    "Recolha e descarte corretamente <strong>1 pilha ou bateria</strong>.",
-    "Compartilhe uma <strong>dica ambiental</strong> com um amigo.",
-    "Separe <strong>vidro</strong> para reciclagem.",
-    "Evite <strong>imprimir</strong> documentos desnecessários hoje.",
-    "Leve <strong>eletrônicos antigos</strong> a um ponto de coleta eletrônica.",
-    "Recolha lixo encontrado em uma <strong>trilha ou parque</strong>.",
-    "Use as <strong>duas faces do papel</strong> antes de descartar.",
-    "Desligue aparelhos da <strong>tomada</strong> quando não estiver usando.",
-    "Recolha ao menos <strong>5 resíduos recicláveis</strong> pelo bairro.",
-    "Plante uma <strong>horta ou vaso</strong> em casa.",
-    "Evite o <strong>desperdício de comida</strong> hoje.",
-    "Compre de um <strong>produtor local</strong> ou orgânico.",
-    "Recicle uma <strong>caixa de papelão</strong>.",
-    "Ajude a organizar uma <strong>coleta seletiva</strong> no seu prédio ou rua.",
-    "Reduza o uso de <strong>canudos e talheres descartáveis</strong> hoje.",
-    "Publique uma foto de uma <strong>ação sustentável</strong> no Trash Hunters.",
-    "Faça um balanço do mês: <strong>quantos resíduos</strong> você recolheu?"
+     "Colete pelo menos <strong>5 resíduos recicláveis</strong> e compartilhe sua conquista no Trash Hunters.",
+    "Transforme sua casa em um exemplo de sustentabilidade separando o <strong>lixo orgânico do reciclável</strong> hoje.",
+    "Dê o destino correto às suas <strong>pilhas usadas</strong> levando-as a um ponto de coleta.",
+    "Antes de descartar, encontre uma nova utilidade para uma <strong>embalagem</strong> que iria para o lixo.",
+    "Escolha um transporte mais sustentável: vá <strong>a pé ou de bicicleta</strong> sempre que possível hoje.",
+    "Resgate pelo menos <strong>3 garrafas PET</strong> do descarte inadequado e encaminhe-as para reciclagem.",
+    "Dedique alguns minutos para <strong>plantar ou regar uma muda</strong> e ajudar o planeta a respirar melhor.",
+    "Faça compras mais conscientes e diga não às <strong>sacolas plásticas descartáveis</strong> hoje.",
+    "Contribua para sua comunidade limpando um <strong>espaço público</strong> próximo a você.",
+    "Separe aquele <strong>papelão acumulado</strong> e garanta sua reciclagem.",
+    "Pratique a solidariedade e doe uma <strong>peça de roupa</strong> que não usa mais.",
+    "Economize água reduzindo seu <strong>tempo de banho em pelo menos 2 minutos</strong> hoje.",
+    "Cada gota conta: mantenha a <strong>torneira fechada</strong> enquanto escova os dentes.",
+    "Troque descartáveis por um <strong>copo reutilizável</strong> e reduza resíduos.",
+    "Encontre e descarte corretamente pelo menos <strong>uma pilha ou bateria usada</strong>.",
+    "Espalhe consciência compartilhando uma <strong>dica ambiental</strong> com alguém hoje.",
+    "Separe seus <strong>resíduos de vidro</strong> e contribua para a reciclagem infinita desse material.",
+    "Evite <strong>impressões desnecessárias</strong> e ajude a economizar papel.",
+    "Dê um destino seguro aos seus <strong>eletrônicos antigos</strong> em um ponto de coleta especializado.",
+    "Durante uma caminhada, recolha resíduos encontrados em uma <strong>trilha, praça ou parque</strong>.",
+    "Aproveite melhor seus recursos utilizando as <strong>duas faces do papel</strong> antes do descarte.",
+    "Economize energia retirando aparelhos da <strong>tomada</strong> quando não estiverem em uso.",
+    "Faça a diferença no seu bairro recolhendo pelo menos <strong>5 resíduos recicláveis</strong> das ruas.",
+    "Cultive vida: comece uma pequena <strong>horta ou vaso com plantas</strong> em casa.",
+    "Desafie-se a passar o dia sem <strong>desperdiçar alimentos</strong>.",
+    "Fortaleça a economia da sua região comprando de um <strong>produtor local ou orgânico</strong>.",
+    "Garanta a reciclagem correta de uma <strong>caixa de papelão</strong> que seria descartada.",
+    "Mobilize sua comunidade para criar ou fortalecer uma <strong>coleta seletiva</strong> na sua rua ou prédio.",
+    "Passe o dia evitando o uso de <strong>canudos e talheres descartáveis</strong>.",
+    "Inspire outras pessoas publicando uma foto de uma <strong>ação sustentável</strong> no Trash Hunters.",
+    "Olhe para trás e celebre seu impacto: <strong>quantos resíduos você ajudou a retirar do meio ambiente</strong> este mês?"
 ];
 
 const missaoTexto = document.getElementById("missaoDoDiaTexto");
@@ -1233,5 +1342,136 @@ if (missaoTexto) {
         }
 
     }, 60000);
+
+}
+
+/* ==========================================================
+                EDITAR / EXCLUIR COMENTÁRIO
+========================================================== */
+
+document.addEventListener("click", async (e) => {
+
+    const botaoEditar = e.target.closest(".editar-comentario-btn");
+    const botaoExcluir = e.target.closest(".excluir-comentario-btn");
+
+    if (botaoEditar) {
+        e.preventDefault();
+        iniciarEdicaoComentario(botaoEditar.closest(".comment"));
+        return;
+    }
+
+    if (botaoExcluir) {
+        e.preventDefault();
+        excluirComentario(botaoExcluir.closest(".comment"));
+        return;
+    }
+
+});
+
+function iniciarEdicaoComentario(comentarioEl) {
+
+    if (!comentarioEl) return;
+
+    const paragrafo = comentarioEl.querySelector(".comment-text");
+    if (!paragrafo || comentarioEl.querySelector(".comment-edit-form")) return;
+
+    const textoAtual = paragrafo.textContent;
+
+    const form = document.createElement("div");
+    form.className = "comment-edit-form";
+    form.innerHTML = `
+        <textarea class="comment-edit-input">${textoAtual}</textarea>
+        <div class="comment-edit-actions">
+            <button type="button" class="comment-edit-cancelar">Cancelar</button>
+            <button type="button" class="comment-edit-salvar">Salvar</button>
+        </div>
+    `;
+
+    paragrafo.style.display = "none";
+    paragrafo.insertAdjacentElement("afterend", form);
+
+    const menu = comentarioEl.querySelector(".post-menu");
+    if (menu) menu.classList.remove("active");
+
+    form.querySelector(".comment-edit-cancelar").addEventListener("click", () => {
+        form.remove();
+        paragrafo.style.display = "";
+    });
+
+    form.querySelector(".comment-edit-salvar").addEventListener("click", async () => {
+
+        const novoTexto = form.querySelector(".comment-edit-input").value.trim();
+
+        if (novoTexto === "") {
+            alert("O comentário não pode ficar vazio.");
+            return;
+        }
+
+        const comentarioId = comentarioEl.dataset.commentId;
+
+        try {
+
+            const response = await fetch("post/editar_comentario.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "comentario_id=" + encodeURIComponent(comentarioId) + "&conteudo=" + encodeURIComponent(novoTexto)
+            });
+
+            const data = await response.json();
+
+            if (data.erro) {
+                alert(data.erro);
+                return;
+            }
+
+            paragrafo.innerHTML = data.conteudo;
+            paragrafo.style.display = "";
+            form.remove();
+
+        } catch (err) {
+            console.error("Erro ao editar comentário:", err);
+        }
+
+    });
+
+}
+
+async function excluirComentario(comentarioEl) {
+
+    if (!comentarioEl) return;
+
+    if (!confirm("Excluir esse comentário?")) return;
+
+    const comentarioId = comentarioEl.dataset.commentId;
+    const post = comentarioEl.closest(".post");
+
+    try {
+
+        const response = await fetch("post/excluir_comentario.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "comentario_id=" + encodeURIComponent(comentarioId)
+        });
+
+        const data = await response.json();
+
+        if (data.erro) {
+            alert(data.erro);
+            return;
+        }
+
+        comentarioEl.remove();
+
+        if (post) {
+            const commentBtn = post.querySelector(".comment-btn");
+            if (commentBtn) {
+                const span = commentBtn.querySelector("span");
+                span.textContent = Math.max(0, parseInt(span.textContent) - 1);
+            }
+        }
+
+    } catch (err) {
+        console.error("Erro ao excluir comentário:", err);
+    }
 
 }

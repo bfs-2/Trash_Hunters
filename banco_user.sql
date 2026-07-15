@@ -171,3 +171,31 @@ CREATE TABLE posts_salvos (
 
     UNIQUE(usuario_id, post_id)
 );
+
+-- --------------------------------------------------------
+-- Mídias de cada postagem (até 5 fotos/vídeos por post)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS post_midias (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    post_id INT(11) NOT NULL,
+    caminho VARCHAR(255) NOT NULL,
+    tipo ENUM('imagem', 'video') NOT NULL,
+    ordem INT(11) NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    KEY post_id (post_id),
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+-- --------------------------------------------------------
+-- Publicações salvas por cada usuário
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS salvos (
+    id INT(11) NOT NULL AUTO_INCREMENT,
+    usuario_id INT(11) NOT NULL,
+    post_id INT(11) NOT NULL,
+    data_salvo DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY unico_salvo (usuario_id, post_id),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);

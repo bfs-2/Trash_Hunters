@@ -725,23 +725,28 @@ background:var(--white);
     position: absolute;
     top: 30px;
     right: 0;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,.2);
-    min-width: 180px;
+    background: var(--white);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.18);
+    min-width: 200px;
+    padding: 8px;
+    overflow: hidden;
     z-index: 1000;
 }
 
 .post-menu-options a{
     display: block;
-    padding: 12px;
-   color:var(--text);
+    padding: 12px 14px;
+    border-radius: 10px;
+    color: var(--text);
     text-decoration: none;
+    font-size: 14px;
 }
 
 .post-menu-options a:hover{
-    background: #f5f5f5;
+    background: var(--gray);
 }
+
 
 .post-menu.active .post-menu-options{
     display: block;
@@ -969,16 +974,15 @@ video.post-media{
 
 }
 
-.comment div{
-
+.comment-body{
     flex:1;
-
-    background:#f6f6f6;
-
+    background:var(--gray);
     padding:15px;
-
     border-radius:15px;
+}
 
+.comment-menu{
+    flex:0 0 auto;
 }
 
 .comment strong{
@@ -1381,13 +1385,19 @@ video.post-media{
 
     max-width:90%;
 
-   background:var(--white); 
+    max-height:80vh;
+
+    background:var(--white); 
 
     border-radius:20px;
 
     overflow:hidden;
 
     animation:modalShow .3s ease;
+
+    display:flex;
+
+    flex-direction:column;
 
 }
 
@@ -1474,6 +1484,10 @@ video.post-media{
 .notification-list{
 
     padding:20px;
+
+    overflow-y:auto;
+
+    flex:1;
 
 }
 
@@ -2843,5 +2857,85 @@ body{
 .theme-toggle-btn:hover{
 
     background:var(--green);
+
+}
+
+/* ==========================================================
+                FORMULÁRIO DE EDITAR COMENTÁRIO
+========================================================== */
+
+.comment-edit-form{
+
+    margin-top:6px;
+
+}
+
+.comment-edit-input{
+
+    width:100%;
+
+    min-height:60px;
+
+    padding:10px 14px;
+
+    border-radius:12px;
+
+    border:1px solid var(--gray2);
+
+    background:var(--white);
+
+    color:var(--text);
+
+    font-family:inherit;
+
+    font-size:14px;
+
+    resize:vertical;
+
+}
+
+.comment-edit-actions{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:8px;
+
+    margin-top:8px;
+
+}
+
+.comment-edit-actions button{
+
+    padding:8px 16px;
+
+    border-radius:20px;
+
+    font-size:13px;
+
+    font-weight:600;
+
+}
+
+.comment-edit-cancelar{
+
+    background:var(--gray2);
+
+    color:var(--text);
+
+}
+
+.comment-edit-salvar{
+
+    background:var(--green);
+
+}
+
+.comment-edit-salvar:hover{
+
+    background:var(--green-dark);
+
+    color:white;
 
 }

@@ -136,7 +136,7 @@ if ($usuario_id > 0) {
                     <?php foreach ($conversa as $msg): ?>
                         <div class="balao <?php echo $msg['remetente_id'] == $meu_id ? 'balao-eu' : 'balao-outro'; ?>">
                             <p><?php echo nl2br(htmlspecialchars($msg['conteudo'])); ?></p>
-                            <span class="msg-timestamp" data-created="<?php echo htmlspecialchars($msg['data_criacao']); ?>"><?php echo formato_data_hora($msg['data_criacao']); ?></span>
+                            <span><?php echo tempo_relativo($msg['data_criacao']); ?></span>
                         </div>
                     <?php endforeach; ?>
 
@@ -154,43 +154,5 @@ if ($usuario_id > 0) {
 
     </div>
   <script src="script.js"></script>
-  
-  <!-- Script para atualizar timestamps das mensagens em tempo real -->
-  <script>
-    function formatRelativeTimeMsg(dateString) {
-        const now = new Date();
-        const created = new Date(dateString.replace(' ', 'T'));
-        if (isNaN(created)) return 'há pouco';
-        const diffMs = now - created;
-        const diffSec = Math.floor(diffMs / 1000);
-        const diffMin = Math.floor(diffSec / 60);
-        const diffH = Math.floor(diffMin / 60);
-        const diffD = Math.floor(diffH / 24);
-        const diffM = Math.floor(diffD / 30);
-        const diffY = Math.floor(diffD / 365);
-
-        if (diffSec < 10) return 'agora mesmo';
-        if (diffSec < 60) return 'há poucos segundos';
-        if (diffMin < 60) return `há ${diffMin} ${diffMin === 1 ? 'minuto' : 'minutos'}`;
-        if (diffH < 24) return `há ${diffH} ${diffH === 1 ? 'hora' : 'horas'}`;
-        if (diffD < 30) return `há ${diffD} ${diffD === 1 ? 'dia' : 'dias'}`;
-        if (diffM < 12) return `há ${diffM} ${diffM === 1 ? 'mês' : 'meses'}`;
-        return `há ${diffY} ${diffY === 1 ? 'ano' : 'anos'}`;
-    }
-
-    function refreshMsgTimestamps() {
-        document.querySelectorAll('.msg-timestamp[data-created]').forEach(span => {
-            const createdAt = span.dataset.created;
-            if (!createdAt) return;
-            span.textContent = formatRelativeTimeMsg(createdAt);
-        });
-    }
-
-    // Atualiza os timestamps ao carregar a página
-    refreshMsgTimestamps();
-    
-    // Atualiza a cada segundo para mensagens recentes
-    setInterval(refreshMsgTimestamps, 1000);
-  </script>
 </body>
 </html>

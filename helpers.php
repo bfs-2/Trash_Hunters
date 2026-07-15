@@ -26,6 +26,30 @@ function tempo_relativo($datetime) {
     if ($diff->i > 0) return "há " . $diff->i . ($diff->i == 1 ? " minuto" : " minutos");
     return "agora mesmo";
 }
+
+/**
+ * Formata uma data do banco (DATETIME) para um formato legível com data e hora.
+ * Se for muito recente (menos de 10 segundos), mostra "agora mesmo".
+ * Se for dentro dos últimos minutos, mostra "há X minutos".
+ * Senão, mostra "14 de jul, 15:30"
+ */
+function formato_data_hora($datetime) {
+    $agora = new DateTime();
+    $data = new DateTime($datetime);
+    $diff = $agora->diff($data);
+    
+    // Se for muito recente, mostra "agora"
+    $diffSec = ($agora->getTimestamp() - $data->getTimestamp());
+    
+    if ($diffSec < 10) return "agora mesmo";
+    if ($diffSec < 60) return "há poucos segundos";
+    if ($diff->i > 0 && $diff->i < 60) return "há " . $diff->i . ($diff->i == 1 ? " minuto" : " minutos");
+    
+    // Senão, mostra a data/hora formatada
+    $meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+    $mes = $meses[(int)$data->format('n') - 1];
+    return $data->format('d') . ' de ' . $mes . ', ' . $data->format('H:i');
+}
 /**
  * Processa o upload de mídia (imagem ou vídeo curto) de uma postagem.
  * Retorna ['caminho' => ..., 'tipo' => 'imagem'|'video'] em caso de sucesso,

@@ -32,13 +32,14 @@ foreach ($posts as &$post) {
     $stmt_curti->execute();
     $post['eu_curti'] = $stmt_curti->get_result()->num_rows > 0;
 
-    $stmt_coment = $mysqli->prepare(
-        "SELECT c.conteudo, u.nome, u.avatar
-         FROM comentarios c
-         JOIN usuarios u ON c.usuario_id = u.id
-         WHERE c.post_id = ?
-         ORDER BY c.id ASC"
-    );
+   $stmt_coment = $mysqli->prepare(
+    "SELECT c.id, c.usuario_id, c.conteudo, u.nome, u.avatar
+     FROM comentarios c
+     JOIN usuarios u ON c.usuario_id = u.id
+     WHERE c.post_id = ?
+     ORDER BY c.id ASC"
+);
+    
    $stmt_coment->bind_param("i", $post['id']);
     $stmt_coment->execute();
     $post['comentarios'] = $stmt_coment->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -450,37 +451,45 @@ foreach ($notificacoes as $n) {
 
                     <section class="comments">
 
-                        <?php foreach ($post['comentarios'] as $comentario): ?>
+                     <?php foreach ($post['comentarios'] as $comentario): ?>
 
-                        <div class="comment">
+<div class="comment" data-comment-id="<?php echo htmlspecialchars($comentario['id'], ENT_QUOTES, 'UTF-8'); ?>">
 
-                            <img src="<?php echo avatar_url($comentario['avatar'], $comentario['nome']); ?>">
+    <img src="<?php echo avatar_url($comentario['avatar'], $comentario['nome']); ?>">
 
-                            <div>
+   <div class="comment-body">
 
-                                <strong><?php echo htmlspecialchars($comentario['nome']); ?></strong>
+        <strong><?php echo htmlspecialchars($comentario['nome']); ?></strong>
 
-                                <p><?php echo htmlspecialchars($comentario['conteudo']); ?></p>
+        <p class="comment-text"><?php echo htmlspecialchars($comentario['conteudo']); ?></p>
 
-                            </div>
+    </div>
 
-                        </div>
+    <?php if ($comentario['usuario_id'] == $_SESSION['id']): ?>
+    <div class="post-menu comment-menu">
+        <button class="post-menu-btn" type="button">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+        <div class="post-menu-options">
+            <a href="#" class="editar-comentario-btn">Editar comentário</a>
+            <a href="#" class="excluir-comentario-btn">Excluir comentário</a>
+        </div>
+    </div>
+<?php endif; ?>
 
-                        <?php endforeach; ?>
+</div>
 
+<?php endforeach; ?>
+  
                         <div class="comment-input" data-post-id="<?php echo $post['id']; ?>">
-
                             <input type="text" placeholder="Escreva um comentário...">
-
                             <button>Enviar</button>
-
                         </div>
-
                     </section>
 
                 </article>
 
-                    <?php endforeach; ?>
+                <?php endforeach; ?>
 
                 <?php endif; ?>
             </section>
@@ -523,7 +532,7 @@ foreach ($notificacoes as $n) {
 
     <p id="missaoDoDiaTexto"></p>
 
-   
+         </section>
 
         </aside>
 
@@ -532,11 +541,6 @@ foreach ($notificacoes as $n) {
                     BOTÃO FLUTUANTE
     ====================================================== -->
 
-    <button id="floating-post-btn" class="floating-post-btn">
-
-        <i class="fa-solid fa-plus"></i>
-
-    </button>
 
 
 

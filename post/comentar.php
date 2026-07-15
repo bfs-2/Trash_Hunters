@@ -51,6 +51,7 @@ $usuario = $stmt_usuario->get_result()->fetch_assoc();
 
 echo json_encode([
     'ok'       => true,
+    'id'       => $mysqli->insert_id,
     'nome'     => htmlspecialchars($usuario['nome']),
     'avatar'   => !empty($usuario['avatar']) ? htmlspecialchars($usuario['avatar']) : null,
     'conteudo' => htmlspecialchars($conteudo)

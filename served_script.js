@@ -583,9 +583,12 @@ if (publishButton && postTextarea) {
 
 const midiaBotao = document.getElementById("midia-botao");
 const midiaPreview = document.getElementById("midia-preview");
-const midiaPreviewImagem = document.getElementById("midia-preview-imagem");
-const midiaPreviewVideo = document.getElementById("midia-preview-video");
-const midiaRemover = document.getElementById("midia-remover");
+const midiaPreviewGrid = document.getElementById("midia-preview-grid");
+const midiaPreviewContador = document.getElementById("midia-preview-contador");
+
+const LIMITE_MIDIAS = 5;
+const LIMITE_IMAGEM = 5 * 1024 * 1024;
+const LIMITE_VIDEO = 25 * 1024 * 1024;
 
 if (midiaBotao && midiaInput) {
 
@@ -595,46 +598,93 @@ if (midiaBotao && midiaInput) {
 
     midiaInput.addEventListener("change", () => {
 
-        const arquivo = midiaInput.files[0];
+        const arquivos = Array.from(midiaInput.files || []);
 
-        if (!arquivo) return;
-
-        const tamanhoMaximo = arquivo.type.startsWith("video/") ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
-
-        if (arquivo.size > tamanhoMaximo) {
-            alert("Arquivo muito grande. O limite Ã© " + (tamanhoMaximo / 1024 / 1024) + "MB.");
-            midiaInput.value = "";
+        if (arquivos.length === 0) {
+            midiaPreview.style.display = "none";
             return;
         }
 
-        const url = URL.createObjectURL(arquivo);
-
-        if (arquivo.type.startsWith("video/")) {
-            midiaPreviewVideo.src = url;
-            midiaPreviewVideo.style.display = "block";
-            midiaPreviewImagem.style.display = "none";
-        } else {
-            midiaPreviewImagem.src = url;
-            midiaPreviewImagem.style.display = "block";
-            midiaPreviewVideo.style.display = "none";
+        if (arquivos.length > LIMITE_MIDIAS) {
+            alert("Você pode enviar no máximo " + LIMITE_MIDIAS + " arquivos por publicação.");
+            limparArquivo(arquivos.length - 1);
+            return;
         }
 
-        midiaPreview.style.display = "block";
+        for (const arquivo of arquivos) {
+            const isVideo = arquivo.type.startsWith("video/");
+            const limite = isVideo ? LIMITE_VIDEO : LIMITE_IMAGEM;
+
+            if (!arquivo.type.startsWith("image/") && !isVideo) {
+                alert("Formato não suportado: " + arquivo.name);
+                limparArquivo(arquivos.indexOf(arquivo));
+                return;
+            }
+
+            if (arquivo.size > limite) {
+                alert("\"" + arquivo.name + "\" é muito grande. O limite é " + (limite / 1024 / 1024) + "MB.");
+                limparArquivo(arquivos.indexOf(arquivo));
+                return;
+            }
+        }
+
+        renderizarPreview(arquivos);
 
     });
 
 }
 
-if (midiaRemover) {
+function renderizarPreview(arquivos) {
 
-    midiaRemover.addEventListener("click", () => {
+    midiaPreviewGrid.innerHTML = "";
 
-        midiaInput.value = "";
-        midiaPreview.style.display = "none";
-        midiaPreviewImagem.src = "";
-        midiaPreviewVideo.src = "";
+    arquivos.forEach((arquivo, index) => {
+
+        const url = URL.createObjectURL(arquivo);
+        const item = document.createElement("div");
+        item.className = "midia-preview-item";
+
+        if (arquivo.type.startsWith("video/")) {
+            const video = document.createElement("video");
+            video.src = url;
+            video.muted = true;
+            item.appendChild(video);
+        } else {
+            const img = document.createElement("img");
+            img.src = url;
+            img.alt = "Pré-visualização";
+            item.appendChild(img);
+        }
+
+        const remover = document.createElement("div");
+        remover.className = "midia-preview-remover";
+        remover.innerHTML = "&times;";
+        remover.addEventListener("click", () => limparArquivo(index));
+        item.appendChild(remover);
+
+        midiaPreviewGrid.appendChild(item);
 
     });
+
+    midiaPreviewContador.textContent = arquivos.length + (arquivos.length === 1 ? " arquivo selecionado" : " arquivos selecionados");
+    midiaPreview.style.display = "block";
+
+}
+
+function limparArquivo(indexParaRemover) {
+
+    const arquivosRestantes = Array.from(midiaInput.files || []).filter((_, i) => i !== indexParaRemover);
+
+    const dataTransfer = new DataTransfer();
+    arquivosRestantes.forEach(arquivo => dataTransfer.items.add(arquivo));
+    midiaInput.files = dataTransfer.files;
+
+    if (arquivosRestantes.length > 0) {
+        renderizarPreview(arquivosRestantes);
+    } else {
+        midiaPreviewGrid.innerHTML = "";
+        midiaPreview.style.display = "none";
+    }
 
 }
 
